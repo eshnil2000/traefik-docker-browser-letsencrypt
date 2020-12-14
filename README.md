@@ -24,3 +24,5 @@ app.get('/:id', (req, res) =>{
             } 
 ```
 ### Browse to labs.codenovator.net
+
+### Traefik dashboard @ monitor.codenovator.net
