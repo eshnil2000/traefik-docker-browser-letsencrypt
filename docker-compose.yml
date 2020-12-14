@@ -1,0 +1,17 @@
+version: '3.3'
+networks:
+  web:
+    external: true
+services:
+  labs:
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    
+    image: labs
+    labels:
+      - traefik.http.routers.labs.rule=Host(`labs.codenovator.net`)
+      - traefik.http.routers.labs.tls=true
+      - traefik.http.routers.labs.tls.certresolver=lets-encrypt
+      - traefik.port=80
+    networks:
+      - web
