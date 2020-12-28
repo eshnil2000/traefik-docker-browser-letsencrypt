@@ -4,16 +4,20 @@ const Dockerode = require('dockerode');
 const docker = new Dockerode({ socketPath: '/var/run/docker.sock' });
 
   var labels = {"traefik.http.routers.jwilderwhoami.rule":"Host(`jwilderwhoami.codenovator.net`)","traefik.http.routers.jwilderwhoami.tls":"true","traefik.http.routers.jwilderwhoami.tls.certresolver":"lets-encrypt","traefik.port":"80"};
-  var networkmode= "web";
+  var networkmode= "docker-browser2_default";
+  //var networkmode= "web";
+
   var image = "jwilder/whoami";
   var exposedports= {"8000":{}};
+  var loadbalancerport =8000;
   var stoptimeout=10;
   var stopsignal= "SIGTERM";
 
-var host= "codenovator.net";
+var host= "labs.dappsuni.com";
 var fs = require('fs');
 var path = require('path');
 var http = require('http');
+var https = require('https');
 var randomstring = require("randomstring");
 var server = http.createServer();
 var xtend = require('xtend');
@@ -21,10 +25,11 @@ var rnd='xxx';
 var subhost='';
 var newhost=host;
 var html='';
-
+var newurl='';
+var urlreturncode=';'
 var storageopt= [{"size":"2G"}];
 
-var timeLimit= 60000*60; //15000ms= 15s
+var timeLimit= 60000*10; //60,000ms= 60s
 const appPort = 8000;
 const nocache = require('nocache');
 const express = require('express');
@@ -75,9 +80,31 @@ function containerInit(labels,res){
 
 function containerSpawned(arg,res) {
     console.log(`spawned`, arg);
-    //setTimeout(destroyContainer, timeLimit, arg);
-    res.writeHead(301,{Location: 'https://'+newhost});
-    res.end(); 
+    function makeRequest() {
+        newurl= 'https://'+newhost;
+        https.get(newurl, function(res) {
+            return res.statusCode;
+        })
+     }
+     
+    function myFunction() {
+        //urlreturncode= makeRequest();
+        //console.log("urlcode is", urlreturncode);
+        //if (urlreturncode == 200) {
+             //res.write('<a href="https://'+ newhost + '"' +  ' target="_blank" style="appearance:button">Go to Lab</a>');
+             //res.write('<iframe src="https://'+ newhost + '"' + 'height="600" width="800" title="Lab"></iframe>');
+             res.writeHead(301,{Location: 'http://'+newhost});
+             //res.writeHead(301,{Location: 'https://'+newhost});
+            res.end();    
+        //}
+        /*else {
+            console.log("setting timeout");
+            setTimeout(myFunction, 1000);
+        }*/
+    }
+    
+    setTimeout(myFunction,5000);
+    
 }
 
 function containerExited(arg) {
@@ -90,14 +117,23 @@ app.get('/:id', (req, res) =>{
             if (req.params.id==1){
                 image= "jwilder/whoami";
                 exposedports= {"8000":{}};
+                loadbalancerport=8000;
             }
             if(req.params.id==2){
                 image= "eshnil2000/docker-ubuntu-vnc-pygame-wingide";
                 exposedports= {"80":{}};
+                loadbalancerport=80;
                 //storageopt= [{"size":"5G"}];
 
             } 
-            console.log("launching image container",image)
+            if(req.params.id==3){
+                image= "eshnil2000/crypto-trading";
+                exposedports= {"5000":{}};
+                loadbalancerport=5000;
+                //storageopt= [{"size":"5G"}];
+
+            }
+            console.log("launching image container",image);
             
     
             subhost=randomstring.generate({
@@ -106,12 +142,20 @@ app.get('/:id', (req, res) =>{
             });
 
             newhost=subhost.concat('.').concat(host);
+            //newhost= host.concat('/').concat(subhost);
  
-            labels= '{"traefik.http.routers.'+ subhost + '.rule":"Host(`'+ subhost+'.codenovator.net`)",';
-            labels= labels + '"traefik.http.routers.'+ subhost + '.tls":"true",'; 
-            labels= labels + '"traefik.http.routers.'+ subhost + '.tls.certresolver":"lets-encrypt",';
-            labels= labels + '"traefik.port":"80",';
-            labels= labels + '"image.type":' + '"' + subhost + '"' + '}';
+            labels= '{"traefik.http.routers.'+ subhost + '.rule":"Host(`'+ subhost+ "."+ host+'`)",';
+            //labels= labels + '"traefik.http.routers.'+ subhost + '.tls":"true",'; 
+            //labels= labels + '"traefik.http.routers.'+ subhost + '.tls.certresolver":"lets-encrypt",';
+            //labels= labels + '"traefik.port":"80",';
+            //labels= labels + '"image.type":' + '"' + subhost + '"' + '}';
+            //labels= labels + '"traefik.http.routers.'+ subhost+ '.entrypoints": "web"';
+            labels= labels + '"traefik.http.routers.'+ subhost+ '.service":' + '"'+ subhost +'"'+ ',';
+            labels= labels + '"traefik.docker.network":"'+  networkmode+ '",';
+            labels= labels + '"traefik.http.services.'+ subhost+ '.loadbalancer.server.port":' + '"'+ loadbalancerport+ '"'  + '}';
+            
+            console.log(labels);
+
             labels= JSON.parse(labels);
 
             containerInit(labels,res);
