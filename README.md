@@ -1,5 +1,9 @@
 # traefik-docker-browser-letsencrypt
 
+### On windows, cloned linux files get an extra "\r" added at the end. To avoid, use:
+```sh
+git clone https://github.com/eshnil2000/traefik-docker-browser-letsencrypt.git --config core.autocrlf=input
+```
 ### Use in conjunction with
 * https://github.com/eshnil2000/traefik-letsencrypt-docker
 
