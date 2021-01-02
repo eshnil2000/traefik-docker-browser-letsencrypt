@@ -13,7 +13,7 @@ const docker = new Dockerode({ socketPath: '/var/run/docker.sock' });
   var stoptimeout=10;
   var stopsignal= "SIGTERM";
 
-var host= "labs.dappsuni.com";
+var host= "localhost";
 var fs = require('fs');
 var path = require('path');
 var http = require('http');

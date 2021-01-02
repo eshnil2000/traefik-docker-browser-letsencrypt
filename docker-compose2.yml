@@ -11,7 +11,7 @@ services:
     
     image: jwilder/whoami
     labels:
-      - traefik.http.routers.whoami.rule=Host(`whoami.labs.dappsuni.com`)
+      - traefik.http.routers.whoami.rule=Host(`whoami.localhost`)
       #- traefik.http.routers.whoami.tls=true
       #- traefik.http.routers.whoami.tls.certresolver=lets-encrypt
       #- traefik.port=80
@@ -29,7 +29,7 @@ services:
     
     image: eshnil2000/crypto-trading
     labels:
-      - traefik.http.routers.crypto.rule=Host(`crypto.labs.dappsuni.com`)
+      - traefik.http.routers.crypto.rule=Host(`crypto.localhost`)
       #- traefik.http.routers.crypto.tls=true
       #- traefik.http.routers.crypto.tls.certresolver=lets-encrypt
       #- traefik.port=80

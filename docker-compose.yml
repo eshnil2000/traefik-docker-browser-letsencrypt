@@ -35,7 +35,7 @@ services:
     
     image: labs
     labels:
-      - traefik.http.routers.labs.rule=Host(`labs.dappsuni.com`)
+      - traefik.http.routers.labs.rule=Host(`localhost`)
       #- traefik.http.routers.labs.tls=true
       #- traefik.http.routers.labs.tls.certresolver=lets-encrypt
       #- traefik.port=80
