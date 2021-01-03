@@ -1,0 +1,52 @@
+#docker network create -d overlay --attachable docker-browser2_default
+version: '3.3'
+networks:
+  docker-browser2_default:
+    driver: overlay
+    external:
+      name:  docker-browser2_default
+services:
+  traefik:
+    
+    # The latest official supported Traefik docker image
+    image: traefik:v2.3
+    
+    # Enables the Traefik Dashboard and tells Traefik to listen to docker
+    # --providers tell Traefik to connect to the Docker provider
+    # enable --log.level=INFO so we can see what Traefik is doing in the log files
+    command: --api.insecure=true --providers.docker --log.level=INFO
+    ports:
+      # Exposes port 80 for incomming web requests
+      - "80:80"
+      # The Web UI port http://0.0.0.0:8080 (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+    
+    networks:
+      docker-browser2_default:
+        #external:
+          #name:  docker-browser2_default
+
+  labs:
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    
+    image: labs
+    labels:
+      - traefik.http.routers.labs.rule=Host(`localhost`)
+      #- traefik.http.routers.labs.tls=true
+      #- traefik.http.routers.labs.tls.certresolver=lets-encrypt
+      #- traefik.port=80
+      #- traefik.http.routers.labs.entrypoints: web
+      - traefik.http.routers.labs.service=labs
+      - traefik.http.services.labs.loadbalancer.server.port=8000
+      - traefik.docker.network=docker-browser2_default
+    
+    networks:
+      docker-browser2_default:
+        #external:
+          #name:  docker-browser2_default
+  
+  
