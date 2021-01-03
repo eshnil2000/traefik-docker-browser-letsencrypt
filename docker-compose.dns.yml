@@ -1,0 +1,102 @@
+#docker network create -d overlay --attachable traefik_default
+version: '3'
+networks:
+  traefik_default:
+    driver: overlay
+    external:
+      name:  traefik_default
+services:
+  traefik:
+    # The latest official supported Traefik docker image
+    image: traefik:v2.3
+    # Enables the Traefik Dashboard and tells Traefik to listen to docker
+    # enable --log.level=INFO so we can see what Traefik is doing in the log files
+    ports:
+      # Exposes port 80 for incomming web requests
+      - "80:80"
+      - "443:443"
+      # The Web UI port http://0.0.0.0:8080 (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Copies the Let's Encrypt certificate locally for ease of backing up
+      - ./letsencrypt:/letsencrypt
+       # Mounts the Traefik static configuration inside the Traefik container
+      - ./traefik.dns.yml:/etc/traefik/traefik.yml
+    
+    networks:
+      traefik_default:
+
+    environment:
+      - "NAMECOM_API_TOKEN=xxxxx"
+      - "NAMECOM_USERNAME=xxx"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.labs.dappsuni.com`)"
+      - "traefik.http.routers.traefik.service=traefik"
+       #- "traefik.http.services.traefik.loadbalancer.server.port=5000"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik-secure.entrypoints=websecure"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=myresolver" 
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main=labs.dappsuni.com"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.labs.dappsuni.com"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.rule=Host(`traefik.labs.dappsuni.com`)"
+      - "traefik.http.routers.traefik-secure.service=traefik"
+
+# Add the catapp service
+  catapp:
+    image: mikesir87/cats:1.0
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.catapp.entrypoints=web"
+      - "traefik.http.routers.catapp.rule=Host(`y.labs.dappsuni.com`)"
+      - "traefik.http.routers.catapp.service=catapp"
+      - "traefik.http.services.catapp.loadbalancer.server.port=5000"
+      - "traefik.http.routers.catapp-secure.entrypoints=websecure"
+      - "traefik.http.routers.catapp-secure.rule=Host(`y.labs.dappsuni.com`)"
+      - "traefik.http.routers.catapp-secure.service=catapp"
+      - "traefik.http.routers.catapp-secure.tls=true"
+      #- "traefik.http.routers.catapp.tls.certresolver=myresolver"
+      
+    networks:
+      traefik_default:
+
+# Add the catapp service
+  whoami:
+    image: jwilder/whoami
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.entrypoints=web"
+      - "traefik.http.routers.whoami.rule=Host(`x.labs.dappsuni.com`)"
+      - "traefik.http.routers.whoami.service=whoami"
+      - "traefik.http.services.whoami.loadbalancer.server.port=8000"
+      - "traefik.http.routers.whoami-secure.entrypoints=websecure"
+      - "traefik.http.routers.whoami-secure.rule=Host(`x.labs.dappsuni.com`)"
+      - "traefik.http.routers.whoami-secure.service=whoami"
+      - "traefik.http.routers.whoami-secure.tls=true"
+      #- "traefik.http.routers.catapp.tls.certresolver=myresolver"
+
+    networks:
+      traefik_default:
+
+# Add the catapp service
+  labs:
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    image: labs
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.labs.entrypoints=web"
+        - "traefik.http.routers.labs.rule=Host(`labs.dappsuni.com`)"
+        - "traefik.http.routers.labs.service=labs"
+        - "traefik.http.services.labs.loadbalancer.server.port=8000"
+        - "traefik.http.routers.labs-secure.entrypoints=websecure"
+        - "traefik.http.routers.labs-secure.rule=Host(`labs.dappsuni.com`)"
+        - "traefik.http.routers.labs-secure.service=labs"
+        - "traefik.http.routers.labs-secure.tls=true"
+        #- "traefik.http.routers.catapp.tls.certresolver=myresolver"
+    networks:
+      traefik_default:
+    

@@ -1,0 +1,42 @@
+################################################################
+# API and dashboard configuration
+################################################################
+api:
+  # Dashboard
+  #
+  #
+  dashboard: true
+  insecure: true
+################################################################
+# Docker configuration backend
+################################################################
+providers:
+  docker:
+    exposedByDefault: false
+################################################################
+# Traefik Logging
+################################################################
+log:
+  level: INFO
+
+################################################################
+# Entrypoint
+################################################################
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+################################################################
+# Challenege DNS
+################################################################
+certificatesResolvers:
+  myresolver:
+    acme:
+      email: eshnil2000@gmail.com 
+      storage: /letsencrypt/acme.json
+      dnsChallenge:
+        provider: namedotcom
+        delayBeforeCheck: 0
+      #caserver: https://acme-staging-v02.api.letsencrypt.org/directory
