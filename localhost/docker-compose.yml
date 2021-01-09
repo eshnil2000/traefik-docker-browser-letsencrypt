@@ -1,10 +1,10 @@
-#docker network create -d overlay --attachable docker-browser2_default
+#docker network create -d overlay --attachable traefik_default
 version: '3.3'
 networks:
-  docker-browser2_default:
+  traefik_default:
     driver: overlay
     external:
-      name:  docker-browser2_default
+      name:  traefik_default
 services:
   traefik:
     
@@ -25,6 +25,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     
     networks:
-      docker-browser2_default:
+      traefik_default:
         #external:
-          #name:  docker-browser2_default
+          #name:  traefik_default

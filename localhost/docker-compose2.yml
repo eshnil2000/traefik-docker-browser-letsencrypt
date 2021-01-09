@@ -1,10 +1,10 @@
 #docker network create -d overlay --attachable docker-browser2_default
 version: '3.3'
 networks:
-  docker-browser2_default:
+  traefik_default:
     driver: overlay
     external:
-      name:  docker-browser2_default
+      name:  traefik_default
 services:
   
   whoami:
@@ -18,10 +18,10 @@ services:
       #- traefik.http.routers.whoami.entrypoints: web
       - traefik.http.routers.whoami.service=whoami
       - traefik.http.services.whoami.loadbalancer.server.port=8000
-      - traefik.docker.network=docker-browser2_default
+      - traefik.docker.network=traefik_default
     
     networks:
-      docker-browser2_default:
+      traefik_default:
         #external:
           #name:  docker-browser2_default
   
@@ -36,9 +36,9 @@ services:
       #- traefik.http.routers.crypto.entrypoints: web
       - traefik.http.routers.crypto.service=crypto
       - traefik.http.services.crypto.loadbalancer.server.port=5000
-      - traefik.docker.network=docker-browser2_default
+      - traefik.docker.network=traefik_default
     
     networks:
-      docker-browser2_default:
+      traefik_default:
         #external:
-          #name:  docker-browser2_default  
+          #name:  traefik_default  

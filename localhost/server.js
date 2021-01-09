@@ -66,7 +66,11 @@ function containerInit(labels,res){
         //StorageOpt: storageopt,
         Memory: 4294967296 , //4G
         Labels: labels,
-        NetworkMode: networkmode
+        NetworkMode: networkmode,
+        Binds: [
+                `/var/run/docker.sock:/var/run/docker.sock`
+            ]
+       
       }, function(err, container){
             console.log(err);
             var c = docker.getContainer(container.id);
@@ -130,6 +134,13 @@ app.get('/:id', (req, res) =>{
                 image= "eshnil2000/crypto-trading";
                 exposedports= {"5000":{}};
                 loadbalancerport=5000;
+                //storageopt= [{"size":"5G"}];
+
+            }
+            if(req.params.id==4){
+                image= "docker-gotty";
+                exposedports= {"8080":{}};
+                loadbalancerport=8080;
                 //storageopt= [{"size":"5G"}];
 
             }
