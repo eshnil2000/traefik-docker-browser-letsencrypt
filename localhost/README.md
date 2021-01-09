@@ -1,5 +1,5 @@
 # traefik-docker-browser-letsencrypt
-
+### NOTE: LF will be replaced by CRLF when uploading to github from Windows based git system. May need to manually change, Mainly expect issues in shell scripts 
 ### On windows, cloned linux files get an extra "\r" added at the end. To avoid, use:
 ```sh
 git clone https://github.com/eshnil2000/traefik-docker-browser-letsencrypt.git --config core.autocrlf=input
