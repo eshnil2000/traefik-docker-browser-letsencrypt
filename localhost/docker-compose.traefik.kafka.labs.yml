@@ -1,4 +1,6 @@
 #docker network create -d overlay --attachable docker-browser2_default
+#gotty image from https://github.com/eshnil2000/docker-gotty
+#crypto trading image from https://github.com/eshnil2000/crypto_trading
 version: '3.3'
 networks:
   docker-browser2_default:
