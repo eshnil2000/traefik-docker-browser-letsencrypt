@@ -4,7 +4,7 @@ const Dockerode = require('dockerode');
 const docker = new Dockerode({ socketPath: '/var/run/docker.sock' });
 
   var labels = {"traefik.http.routers.jwilderwhoami.rule":"Host(`jwilderwhoami.codenovator.net`)","traefik.http.routers.jwilderwhoami.tls":"true","traefik.http.routers.jwilderwhoami.tls.certresolver":"lets-encrypt","traefik.port":"80"};
-  var networkmode= "docker-browser2_default";
+  var networkmode= "traefik_default";
   //var networkmode= "web";
 
   var image = "jwilder/whoami";

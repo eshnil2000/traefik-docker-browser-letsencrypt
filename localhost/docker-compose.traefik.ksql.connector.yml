@@ -1,0 +1,163 @@
+#docker network create -d overlay --attachable traefik_default
+#gotty image from https://github.com/eshnil2000/docker-gotty
+#crypto trading image from https://github.com/eshnil2000/crypto_trading
+version: '3.3'
+networks:
+  traefik_default:
+    driver: overlay
+    external:
+      name:  traefik_default
+services:
+  
+
+  mysql:
+    # *-----------------------------*
+    # To connect to the DB: 
+    #   docker exec -it mysql bash -c 'mysql -u root -p$MYSQL_ROOT_PASSWORD'
+    # *-----------------------------*
+    image: mysql:8.0
+    container_name: mysql
+    hostname: mysql
+    labels:
+      - traefik.http.routers.mysql.rule=Host(`mysql.localhost`)
+      #- traefik.http.routers.crypto.tls=true
+      #- traefik.http.routers.crypto.tls.certresolver=lets-encrypt
+      #- traefik.port=80
+      #- traefik.http.routers.crypto.entrypoints: web
+      - traefik.http.routers.mysql.service=mysql
+      - traefik.http.services.mysql.loadbalancer.server.port=3306
+      - traefik.docker.network=traefik_default
+    
+    environment:
+     - MYSQL_ROOT_PASSWORD=nick
+     - MYSQL_USER=nick
+     - MYSQL_PASSWORD=nick
+    
+    networks:
+      traefik_default:
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:5.4.1
+    container_name: schema-registry
+    hostname: schema-registry
+    depends_on:
+      - zookeeper
+      - kafka1
+    #ports:
+    #  - 8081:8081
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
+
+    labels:
+      - traefik.http.routers.schema-registry.rule=Host(`schema-registry.localhost`)
+      #- traefik.http.routers.crypto.tls=true
+      #- traefik.http.routers.crypto.tls.certresolver=lets-encrypt
+      #- traefik.port=80
+      #- traefik.http.routers.crypto.entrypoints: web
+      - traefik.http.routers.schema-registry.service=schema-registry
+      - traefik.http.services.schema-registry.loadbalancer.server.port=8081
+      - traefik.docker.network=traefik_default
+
+    networks:
+      traefik_default:
+
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect-base:5.4.1
+    container_name: kafka-connect
+    hostname: kafka-connect
+    depends_on:
+      - kafka1
+      - schema-registry
+    #ports:
+    #  - 8083:8083
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "kafka1:9091"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: kafka-connect
+      CONNECT_CONFIG_STORAGE_TOPIC: _kafka-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _kafka-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _kafka-connect-status
+      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
+      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components/,/connectors/'
+      # If you want to use the Confluent Hub installer to d/l component, but make them available
+      # when running this offline, spin up the stack once and then run : 
+      #   docker cp kafka-connect:/usr/share/confluent-hub-components ./connectors
+      #   mv ./connectors/confluent-hub-components/* ./connectors
+      #   rm -rf ./connectors/confluent-hub-components
+    volumes:
+      - $PWD/connectors:/connectors
+    # In the command section, $ are replaced with $$ to avoid the error 'Invalid interpolation format for "command" option'
+    command: 
+      - bash 
+      - -c 
+      - |
+        echo "Installing connector plugins"
+        confluent-hub install --no-prompt mdrogalis/voluble:0.2.0
+        confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:5.4.1
+        #
+        echo "Downloading JDBC driver"
+        cd /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
+        curl https://cdn.mysql.com/Downloads/Connector-J/mysql-connector-java-8.0.19.tar.gz | tar xz 
+        #
+        echo "Launching Kafka Connect worker"
+        /etc/confluent/docker/run & 
+        #
+        sleep infinity
+      
+    labels:
+      - traefik.http.routers.kafka-connect.rule=Host(`kafka-connect.localhost`)
+      #- traefik.http.routers.crypto.tls=true
+      #- traefik.http.routers.crypto.tls.certresolver=lets-encrypt
+      #- traefik.port=80
+      #- traefik.http.routers.crypto.entrypoints: web
+      - traefik.http.routers.kafka-connect.service=kafka-connect
+      - traefik.http.services.kafka-connect.loadbalancer.server.port=8083
+      - traefik.docker.network=traefik_default
+
+    networks:
+      traefik_default:
+
+  ksqldb:
+    image: confluentinc/ksqldb-server:0.8.0
+    hostname: ksqldb
+    container_name: ksqldb
+    hostname: ksqldb
+    depends_on:
+      - kafka1
+      - kafka-connect
+    #ports:
+    #  - "8088:8088"
+    environment:
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_BOOTSTRAP_SERVERS: kafka1:9091
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      KSQL_KSQL_CONNECT_URL: http://kafka-connect:8083
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KSQL_KSQL_SERVICE_ID: confluent_rmoff_01
+      KSQL_KSQL_HIDDEN_TOPICS: '^_.*'
+
+    labels:
+      - traefik.http.routers.ksqldb.rule=Host(`ksqldb.localhost`)
+      #- traefik.http.routers.crypto.tls=true
+      #- traefik.http.routers.crypto.tls.certresolver=lets-encrypt
+      #- traefik.port=80
+      #- traefik.http.routers.crypto.entrypoints: web
+      - traefik.http.routers.ksqldb.service=ksqldb
+      - traefik.http.services.ksqldb.loadbalancer.server.port=8088
+      - traefik.docker.network=traefik_default
+
+    networks:
+      traefik_default:

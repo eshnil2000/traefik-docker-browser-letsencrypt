@@ -1,4 +1,4 @@
-#docker network create -d overlay --attachable docker-browser2_default
+#docker network create -d overlay --attachable traefik_default
 version: '3.3'
 networks:
   traefik_default:
@@ -23,7 +23,7 @@ services:
     networks:
       traefik_default:
         #external:
-          #name:  docker-browser2_default
+          #name:  traefik_default
   
   crypto:
     

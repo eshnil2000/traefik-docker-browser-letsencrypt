@@ -1,12 +1,12 @@
-#docker network create -d overlay --attachable docker-browser2_default
+#docker network create -d overlay --attachable traefik_default
 #gotty image from https://github.com/eshnil2000/docker-gotty
 #crypto trading image from https://github.com/eshnil2000/crypto_trading
 version: '3.3'
 networks:
-  docker-browser2_default:
+  traefik_default:
     driver: overlay
     external:
-      name:  docker-browser2_default
+      name:  traefik_default
 services:
   traefik:
     
@@ -27,9 +27,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     
     networks:
-      docker-browser2_default:
+      traefik_default:
         #external:
-          #name:  docker-browser2_default
+          #name:  traefik_default
 
   labs:
     volumes:
@@ -44,12 +44,12 @@ services:
       #- traefik.http.routers.labs.entrypoints: web
       - traefik.http.routers.labs.service=labs
       - traefik.http.services.labs.loadbalancer.server.port=8000
-      - traefik.docker.network=docker-browser2_default
+      - traefik.docker.network=traefik_default
     
     networks:
-      docker-browser2_default:
+      traefik_default:
         #external:
-          #name:  docker-browser2_default
+          #name:  traefik_default
   
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -59,7 +59,7 @@ services:
     labels:
       - traefik.http.routers.zookeeper.rule=Host(`zookeeper`)
     networks:
-      docker-browser2_default:
+      traefik_default:
 
   kafka1:
     image: confluentinc/cp-kafka:latest
@@ -77,7 +77,7 @@ services:
     labels:
       - traefik.http.routers.kafka1.rule=Host(`kafka1`)
     networks:
-      docker-browser2_default:
+      traefik_default:
       
   kafka2:
     image: confluentinc/cp-kafka:latest
@@ -95,7 +95,7 @@ services:
     labels:
       - traefik.http.routers.kafka2.rule=Host(`kafka2`)
     networks:
-      docker-browser2_default:
+      traefik_default:
   
   kafka3:
     image: confluentinc/cp-kafka:latest
@@ -113,7 +113,7 @@ services:
     labels:
       - traefik.http.routers.kafka3.rule=Host(`kafka3`)
     networks:
-      docker-browser2_default:
+      traefik_default:
   
   
   kafdrop:
@@ -132,9 +132,9 @@ services:
       - traefik.http.routers.kafdrop.rule=Host(`kafdrop.localhost`)
       - traefik.http.routers.kafdrop.service=kafdrop
       - traefik.http.services.kafdrop.loadbalancer.server.port=9000
-      - traefik.docker.network=docker-browser2_default
+      - traefik.docker.network=traefik_default
     networks:
-      docker-browser2_default:
+      traefik_default:
   
   crypto:
     
@@ -148,7 +148,7 @@ services:
       #- traefik.http.routers.crypto.entrypoints: web
       - traefik.http.routers.crypto.service=crypto
       - traefik.http.services.crypto.loadbalancer.server.port=5000
-      - traefik.docker.network=docker-browser2_default
+      - traefik.docker.network=traefik_default
     
     networks:
-      docker-browser2_default:
+      traefik_default:

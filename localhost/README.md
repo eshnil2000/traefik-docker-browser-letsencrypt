@@ -6,19 +6,19 @@ git clone https://github.com/eshnil2000/traefik-docker-browser-letsencrypt.git -
 ```
 ### to launch service manually
 ```sh
-docker service create --network docker-browser2_default \
+docker service create --network traefik_default \
 --name whoami2 --container-label traefik.http.routers.whoami2.rule='Host(`whoami2.localhost`)' \
 --container-label traefik.http.routers.whoami2.service="whoami2" \
 --container-label traefik.http.services.whoami2.loadbalancer.server.port="8000" \
---container-label traefik.docker.network="docker-browser2_default" \
+--container-label traefik.docker.network="traefik_default" \
 --label traefik.http.routers.whoami2.rule='Host(`whoami2.localhost`)' \
 --label traefik.http.routers.whoami2.service="whoami2" \
 --label traefik.http.services.whoami2.loadbalancer.server.port="8000" \
---label traefik.docker.network="docker-browser2_default" jwilder/whoami
+--label traefik.docker.network="traefik_default" jwilder/whoami
 ```
 
 ### Steps
-* docker network create -d overlay --attachable docker-browser2_default
+* docker network create -d overlay --attachable traefik_default
 * git clone https://github.com/eshnil2000/traefik-docker-browser-letsencrypt.git --config core.autocrlf=input
 * cd traefik-docker-browser-letsencrypt
 * docker build -t labs .
